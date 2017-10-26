@@ -53,8 +53,8 @@ def lddmm_image_2d(xA,yA,IA,xT,yT,IT,sigmaI=0.1,sigmaR=10.0,alpha=10.0,nT=5,nite
     # and constructing diffeomorphisms
     # note when deforming two things with the same transformation, we want to do 
     # both at the same time
-    interpolatorA = interp.RegularGridInterpolator((yA,xA),IA,method='linear',bounds_error=False,fill_value=0.0)
-    interpolatorT = interp.RegularGridInterpolator((yT,xT),IA,method='linear',bounds_error=False,fill_value=0.0)
+    interpolatorA = interp.RegularGridInterpolator((yA,xA),IA,method='linear',bounds_error=False,fill_value=None)
+    interpolatorT = interp.RegularGridInterpolator((yT,xT),IA,method='linear',bounds_error=False,fill_value=None)
     
     
     # I need to save I as a function of t because I will need its gradient

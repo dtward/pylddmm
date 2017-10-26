@@ -21,12 +21,13 @@ plt.close('all')
 # image domain
 # in general this will be read from an input file
 # in general
-nx = 50
-ny = 50
-nz = 50
-dx = 1.0
-dy = 1.1
-dz = 0.9
+down = 2
+nx = 50//down
+ny = 50//down
+nz = 50//down
+dx = 1.0*down
+dy = 1.1*down
+dz = 0.9*down
 x0 = 0.5
 y0 = 10.3
 z0 = 5.3
@@ -51,7 +52,7 @@ K = K/np.sum(K)
 Khat = np.real(np.fft.fftn(K))
 
 J = []
-N = 2
+N = 5
 for i in range(N+1):
     mag = 0.2
     J_ = (xx - np.mean(x))**2/(r*(1.0 + np.random.randn()*mag))**2 + (yy - np.mean(y))**2/(r*(1.0 + np.random.randn()*mag))**2 + (zz - np.mean(z))**2/(r*(1.0 + np.random.randn()*mag))**2 <= 1
