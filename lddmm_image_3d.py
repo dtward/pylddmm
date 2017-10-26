@@ -45,6 +45,15 @@ def gradient(I,dx,dy,dz):
     # return the gradient as a tuple
     return Ix,Iy,Iz
     
+def determinant_of_jacobian(phix,phiy,phiz,dx,dy,dz):
+    phixx,phixy,phixz = gradient(phix,dx,dy,dz)
+    phiyx,phiyy,phiyz = gradient(phiy,dx,dy,dz)
+    phizx,phizy,phizz = gradient(phiz,dx,dy,dz)
+    
+    return phixx*(phiyy*phizz - phiyz*phizy) \
+        - phixy*(phiyx*phizz - phiyz*phizx) \
+        + phixz*(phiyx*phizy - phiyy*phizx)
+    
     
 def lddmm_image_3d(xA,yA,zA,IA,xT,yT,zT,IT,sigmaI=0.1,sigmaR=10.0,alpha=10.0,nT=5,niter=100,epsilon=0.1,nshow=10,nprint=1,vtx=None,vty=None,vtz=None):
     # set up figure
@@ -237,6 +246,7 @@ def lddmm_image_3d(xA,yA,zA,IA,xT,yT,zT,IT,sigmaI=0.1,sigmaR=10.0,alpha=10.0,nT=
             phi1tinvzz[0,:,:] = phi1tinvzz[1,:,:]
             phi1tinvzz[-1,:,:] = phi1tinvzz[-2,:,:]
             '''
+            '''
             phi1tinvxx,phi1tinvxy,phi1tinvxz = gradient(phi1tinvx,dxT,dyT,dzT)
             phi1tinvyx,phi1tinvyy,phi1tinvyz = gradient(phi1tinvy,dxT,dyT,dzT)
             phi1tinvzx,phi1tinvzy,phi1tinvzz = gradient(phi1tinvz,dxT,dyT,dzT)
@@ -244,7 +254,8 @@ def lddmm_image_3d(xA,yA,zA,IA,xT,yT,zT,IT,sigmaI=0.1,sigmaR=10.0,alpha=10.0,nT=
             detjac = phi1tinvxx*(phi1tinvyy*phi1tinvzz - phi1tinvyz*phi1tinvzy)\
                 -phi1tinvxy*(phi1tinvyx*phi1tinvzz - phi1tinvyz*phi1tinvzx)\
                 + phi1tinvxz*(phi1tinvyx*phi1tinvzy - phi1tinvyy*phi1tinvzx)
-            
+            '''
+            detjac = determinant_of_jacobian(phi1tinvx,phi1tinvy,phi1tinvz,dxT,dyT,dzT)
             # pull back the gradient, it is multiplied by detjac because this 
             # operation is transport of measure
             interpolatorT.values = lambdaI
