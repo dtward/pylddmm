@@ -16,9 +16,14 @@ import scipy.interpolate as interp
 
 
 def gradient(I,dx,dy,dz):
-    Ix = (np.roll(I,-1,axis=2) - np.roll(I,1,axis=2))/(2.0*dx)
-    Iy = (np.roll(I,-1,axis=1) - np.roll(I,1,axis=1))/(2.0*dy)
-    Iz = (np.roll(I,-1,axis=0) - np.roll(I,1,axis=0))/(2.0*dz)
+    '''
+    Takes centered difference in middle, forward or backward difference at edges
+    last index is x, second last is y, third last is z
+    Should be able to work with multi channel images based on indexing with ellipses
+    '''
+    Ix = (np.roll(I,-1,axis=-1) - np.roll(I,1,axis=-1))/(2.0*dx)
+    Iy = (np.roll(I,-1,axis=-2) - np.roll(I,1,axis=-2))/(2.0*dy)
+    Iz = (np.roll(I,-1,axis=-3) - np.roll(I,1,axis=-3))/(2.0*dz)
     
     # basic boundary conditions
     '''
@@ -30,13 +35,17 @@ def gradient(I,dx,dy,dz):
     Iz[-1,:,:] = Iz[-2,:,:]
     '''
     # instead, do like matlab, no centered difference at edges
-    Ix[:,:,0] = (I[:,:,1] - I[:,:,0])/dx
-    Ix[:,:,-1] = (I[:,:,-1] - I[:,:,-2])/dx
-    Iy[:,0,:] = (I[:,1,:] - I[:,0,:])/dy
-    Iy[:,-1,:] = (I[:,-1,:] - I[:,-2,:])/dy
+    Ix[...,0] = (I[...,1] - I[...,0])/dx
+    Ix[...,-1] = (I[...,-1] - I[...,-2])/dx
+    Iy[...,0,:] = (I[...,1,:] - I[...,0,:])/dy
+    Iy[...,-1,:] = (I[...,-1,:] - I[...,-2,:])/dy
+    Iz[0,:,:] = (I[1,:,:] - I[0,:,:])/dz
+    Iz[-1,:,:] = (I[-1,:,:] - I[-2,:,:])/dz
+    
+    # return the gradient as a tuple
+    return Ix,Iy,Iz
     
     
-    return dx,dy,dz
 def lddmm_image_3d(xA,yA,zA,IA,xT,yT,zT,IT,sigmaI=0.1,sigmaR=10.0,alpha=10.0,nT=5,niter=100,epsilon=0.1,nshow=10,nprint=1,vtx=None,vty=None,vtz=None):
     # set up figure
     if nshow: fig = plt.figure()    
@@ -238,9 +247,11 @@ def lddmm_image_3d(xA,yA,zA,IA,xT,yT,zT,IT,sigmaI=0.1,sigmaR=10.0,alpha=10.0,nT=
             lambdaIt = interpolatorT((phi1tinvz,phi1tinvy,phi1tinvx))*detjac
             
             # and image derivative, centered difference
+            '''
             Itx = (np.roll(It[t],-1,axis=2) - np.roll(It[t],1,axis=2))/(2.0*dxT)
             Ity = (np.roll(It[t],-1,axis=1) - np.roll(It[t],1,axis=1))/(2.0*dyT)
             Itz = (np.roll(It[t],-1,axis=0) - np.roll(It[t],1,axis=0))/(2.0*dzT)
+            
             
             Itx[:,:,0] = Itx[:,:,1]
             Itx[:,:,-1] = Itx[:,:,-2]
@@ -248,6 +259,9 @@ def lddmm_image_3d(xA,yA,zA,IA,xT,yT,zT,IT,sigmaI=0.1,sigmaR=10.0,alpha=10.0,nT=
             Ity[:,-1,:] = Ity[:,-2,:]
             Itz[0,:,:] = Itz[1,:,:]
             Itz[-1,:,:] = Itz[-2,:,:]
+            '''
+            # replace with my new gradient function
+            Itx,Ity,Itz = gradient(It[t],dxT,dyT,dzT)
             
             # the matching part of the gradient        
             gradx = -lambdaIt*Itx
