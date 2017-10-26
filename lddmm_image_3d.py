@@ -202,6 +202,7 @@ def lddmm_image_3d(xA,yA,zA,IA,xT,yT,zT,IT,sigmaI=0.1,sigmaR=10.0,alpha=10.0,nT=
             phi1tinvz = out[:,:,:,2]+zzT+vtz[t]*dt
             
             # we need determinant of jacobian, use centered difference
+            '''
             phi1tinvxx = (np.roll(phi1tinvx,-1,axis=2) - np.roll(phi1tinvx,1,axis=2))/(2.0*dxT)
             phi1tinvxy = (np.roll(phi1tinvx,-1,axis=1) - np.roll(phi1tinvx,1,axis=1))/(2.0*dyT)
             phi1tinvxz = (np.roll(phi1tinvx,-1,axis=0) - np.roll(phi1tinvx,1,axis=0))/(2.0*dzT)
@@ -235,7 +236,10 @@ def lddmm_image_3d(xA,yA,zA,IA,xT,yT,zT,IT,sigmaI=0.1,sigmaR=10.0,alpha=10.0,nT=
             phi1tinvzy[:,-1,:] = phi1tinvzy[:,-2,:]
             phi1tinvzz[0,:,:] = phi1tinvzz[1,:,:]
             phi1tinvzz[-1,:,:] = phi1tinvzz[-2,:,:]
-            
+            '''
+            phi1tinvxx,phi1tinvxy,phi1tinvxz = gradient(phi1tinvx,dxT,dyT,dzT)
+            phi1tinvyx,phi1tinvyy,phi1tinvyz = gradient(phi1tinvy,dxT,dyT,dzT)
+            phi1tinvzx,phi1tinvzy,phi1tinvzz = gradient(phi1tinvz,dxT,dyT,dzT)
             
             detjac = phi1tinvxx*(phi1tinvyy*phi1tinvzz - phi1tinvyz*phi1tinvzy)\
                 -phi1tinvxy*(phi1tinvyx*phi1tinvzz - phi1tinvyz*phi1tinvzx)\

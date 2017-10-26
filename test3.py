@@ -58,7 +58,7 @@ niter = 100
 sigmaR = 5.0
 sigmaI = 0.1
 alpha = 10.0
-epsilon = 1.0e-0
+epsilon = 5.0e-0
 
 #niter = 5
 output = lddmm.lddmm_image_3d(x,y,z,I,x,y,z,J,niter=niter,sigmaR=sigmaR,sigmaI=sigmaI,alpha=alpha,epsilon=epsilon,nshow=1)
