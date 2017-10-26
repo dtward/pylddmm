@@ -105,8 +105,10 @@ def lddmm_image_3d(xA,yA,zA,IA,xT,yT,zT,IT,sigmaI=0.1,sigmaR=10.0,alpha=10.0,nT=
     # and constructing diffeomorphisms
     # note when deforming two things with the same transformation, we want to 
     # do both at the same time
-    interpolatorA = interp.RegularGridInterpolator((zA,yA,xA),IA,method='linear',bounds_error=False,fill_value=0.0)
-    interpolatorT = interp.RegularGridInterpolator((zT,yT,xT),IA,method='linear',bounds_error=False,fill_value=0.0)
+    # note fill value none means "values are extrapolated"
+    # see here /usr/lib/python2.7/dist-packages/scipy/interpolate/interpolate.py
+    interpolatorA = interp.RegularGridInterpolator((zA,yA,xA),IA,method='linear',bounds_error=False,fill_value=None)
+    interpolatorT = interp.RegularGridInterpolator((zT,yT,xT),IA,method='linear',bounds_error=False,fill_value=None)
     
     
     # I need to save I as a function of t because I will need its gradient
@@ -353,9 +355,6 @@ def lddmm_image_3d_template(x,y,z,I,sigmaI=0.1,sigmaR=10.0,alpha=10.0,nT=5,niter
             matching_cost += output['Em'][-1]
             reg_cost += output['Er'][-1]
             
-            
-            
-            
             # test
             #figtest.clf()
             #axtest = figtest.add_subplot(111)
@@ -372,7 +371,10 @@ def lddmm_image_3d_template(x,y,z,I,sigmaI=0.1,sigmaR=10.0,alpha=10.0,nT=5,niter
         # if I'm not doing regularization, this variational approach I think is dumb
 
         # hack, problem on edges of gradient, I don't konw why
-        IAgrad[0,:,:] = IAgrad[-1,:,:] = IAgrad[:,0,:] = IAgrad[:,-1,:] = IAgrad[:,:,0] = IAgrad[:,:,-1] = 0
+        #IAgrad[0,:,:] = IAgrad[-1,:,:] = IAgrad[:,0,:] = IAgrad[:,-1,:] = IAgrad[:,:,0] = IAgrad[:,:,-1] = 0
+        # it seems that even after I changed my gradients better, I still get these
+        # terrible boundary effects
+        # what could it be? it must be from interpolation
         
         IA = IA - epsilonA*IAgrad
         if nshow and not iteration%nshow:
@@ -415,6 +417,6 @@ def lddmm_image_3d_template(x,y,z,I,sigmaI=0.1,sigmaR=10.0,alpha=10.0,nT=5,niter
             h = ax.imshow(output[vis][:,:,nx/2],extent=extent,interpolation='none',cmap='gray')
             plt.colorbar(mappable=h)     
 
-            fig.savefig('template_iteration_{:04d}.png'.format(iteration))
+            #fig.savefig('template_iteration_{:04d}.png'.format(iteration))
             plt.pause(1.0e-10) # draw it now
             

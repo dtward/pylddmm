@@ -51,7 +51,7 @@ K = K/np.sum(K)
 Khat = np.real(np.fft.fftn(K))
 
 J = []
-N = 5
+N = 2
 for i in range(N+1):
     mag = 0.2
     J_ = (xx - np.mean(x))**2/(r*(1.0 + np.random.randn()*mag))**2 + (yy - np.mean(y))**2/(r*(1.0 + np.random.randn()*mag))**2 + (zz - np.mean(z))**2/(r*(1.0 + np.random.randn()*mag))**2 <= 1
