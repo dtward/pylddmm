@@ -13,6 +13,7 @@ TO DO: template estimation
 import numpy as np
 import matplotlib.pyplot as plt
 import scipy.interpolate as interp
+from multiprocessing import Pool
 
 
 def gradient(I,dx,dy,dz):
@@ -308,9 +309,19 @@ def lddmm_image_3d(xA,yA,zA,IA,xT,yT,zT,IT,sigmaI=0.1,sigmaR=10.0,alpha=10.0,nT=
             'phi10invx':phi1tinvx,'phi10invy':phi1tinvy,'phi10invz':phi1tinvz,
             'lambdaI0':lambdaIt,'detjacphi10inv':detjac,
             'Er':Er,'Em':Em,'E':E}
-            
 
-def lddmm_image_3d_template(x,y,z,I,sigmaI=0.1,sigmaR=10.0,alpha=10.0,nT=5,niter=100,epsilon=0.1,nshow=10,IA=None,niterA=100,epsilonA=0.1,vtx=None,vty=None,vtz=None,tvreg = 1.0,tvepsilon=0.01):
+
+def lddmm_image_3d_tuple(data):
+    return lddmm_image_3d(*data)
+
+
+def lddmm_image_3d_template(x,y,z,I,
+                            sigmaI=0.1,sigmaR=10.0,alpha=10.0,
+                            nT=5,niter=100,epsilon=0.1,nshow=10,
+                            IA=None,niterA=100,epsilonA=0.1,
+                            vtx=None,vty=None,vtz=None,
+                            tvreg = 1.0,tvepsilon=0.01,
+                            npool = None):
     ''' 
     for inputs assume for now they are all the same size
     I will be a LIST of images (or an equivalent array whose first index gives an image)
@@ -344,7 +355,47 @@ def lddmm_image_3d_template(x,y,z,I,sigmaI=0.1,sigmaR=10.0,alpha=10.0,nT=5,niter
     for iteration in range(niterA):
         IAgrad = np.zeros_like(IA)
         matching_cost = 0.0
-        reg_cost = 0.0        
+        reg_cost = 0.0
+        
+        
+        
+        '''
+        def lddmm_wrapper(i):
+            print('running process {}'.format(i))
+            output = lddmm_image_3d(x,y,z,IA,x,y,z,I[i],sigmaI=sigmaI,sigmaR=sigmaR,alpha=alpha,nT=nT,niter=niter,epsilon=epsilon,nshow=0,vtx=vtx[i],vty=vty[i],vtz=vtz[i],nprint=0)
+            #return output['vtx'],output['vty'],output['vtz'],output['lambdaI0']
+            return {k:v for k,v in output.iteritems() if k in ['vtx','vty','lambdaI0','Em','Er'] }
+        
+        
+        p = Pool(4)
+        out_all = p.map(lddmm_wrapper,range(N))
+        '''
+        # the above approach did not work, got "Can't pickle <type 'function'>: attribute lookup __builtin__.function failed"
+        # let's try something else
+        # I believe the reason is the way variables are passed based on a context
+        
+        
+        
+        p = Pool(4)                        
+        # data should be
+        # xA,yA,zA,IA,xT,yT,zT,IT,sigmaI=0.1,sigmaR=10.0,alpha=10.0,nT=5,niter=100,epsilon=0.1,nshow=10,nprint=1,vtx=None,vty=None,vtz=None
+        nshowlddmm = 0
+        nprintlddmm = 0
+        data = [(x,y,z,IA,x,y,z,I[i],sigmaI,sigmaR,alpha,nT,niter,epsilon,nshowlddmm,nprintlddmm,vtx[i],vty[i],vtz[i]) for i in range(N)]                
+        print(data)
+        out_all = p.map(lddmm_image_3d_tuple,data)
+        
+        # well this didn't work the first time, got the same errors, tried adding the function in my data list
+        for i in range(N):
+            output = out_all[i]
+            vtx[i] = output['vtx']
+            vty[i] = output['vty']
+            vtz[i] = output['vtz']
+            IAgrad = IAgrad + output['lambdaI0']
+            matching_cost += output['Em'][-1]
+            reg_cost += output['Er'][-1]
+        
+        '''
         for i in range(N):
             output = lddmm_image_3d(x,y,z,IA,x,y,z,I[i],sigmaI=sigmaI,sigmaR=sigmaR,alpha=alpha,nT=nT,niter=niter,epsilon=epsilon,nshow=0,vtx=vtx[i],vty=vty[i],vtz=vtz[i],nprint=0)
             vtx[i] = output['vtx']
@@ -360,6 +411,7 @@ def lddmm_image_3d_template(x,y,z,I,sigmaI=0.1,sigmaR=10.0,alpha=10.0,nT=5,niter
             #axtest = figtest.add_subplot(111)
             #axtest.imshow(output['detjacphi10inv'][nz/2],cmap='gray',interpolation='none')
             #plt.pause(0.01)
+        '''
         Em.append(matching_cost)
         Er.append(reg_cost)
         energy = matching_cost + reg_cost
