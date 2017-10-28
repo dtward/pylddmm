@@ -360,8 +360,10 @@ def lddmm_image_3d_template(x,y,z,I,
         
         # right now I can't get pool to work without memory usage growing so high the computer crashes
         # is memory growing even without?
-        if npool is not None and npool > 1:        
-            p = Pool(npool)                        
+        if npool is not None and npool > 1:   
+            # I'm going to try only opening the pool once
+            if iteration == 0:
+                p = Pool(npool)                        
             # data should be
             # xA,yA,zA,IA,xT,yT,zT,IT,sigmaI=0.1,sigmaR=10.0,alpha=10.0,nT=5,niter=100,epsilon=0.1,nshow=10,nprint=1,vtx=None,vty=None,vtz=None
             nshowlddmm = 0
@@ -400,14 +402,19 @@ def lddmm_image_3d_template(x,y,z,I,
             # let's try one more
             # only make the data the first time
             # since we pass by reference, the elements should update each time
+            
+            # this doesn't make a difference
             if iteration == 0:
                 data = [(x,y,z,IA,x,y,z,I[i],sigmaI,sigmaR,alpha,nT,niter,epsilon,nshowlddmm,nprintlddmm,vtx[i],vty[i],vtz[i]) for i in range(N)]
             # this one also doesn't work! memory  grows and grows!
             #out_all = p.map(lddmm_image_3d_tuple,data)
             out_all = p.map(lddmm_image_3d_tuple,data,chunksize=1)
             
-            p.close()
-            p.join()
+            # note calling map WAITS for all processes to complete
+            # imap does not, and returns an iterator with a timeout
+            if iteration == niterA-1:
+                p.close()
+                p.join()
             '''
             out_all = []
             for r in results:

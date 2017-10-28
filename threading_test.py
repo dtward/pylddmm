@@ -8,6 +8,7 @@ Created on Sat Oct 28 08:56:54 2017
 from multiprocessing import Pool
 from multiprocessing import Process
 import os
+import time
 
 def f(x):
     return x*x
@@ -36,8 +37,9 @@ p.join()
 
 
 def do_nothing(x,test=1):
+    print('hi')
     return x
-def multiply(x,y):
+def multiply(x,y):    
     x = do_nothing(x)
     return x*y
 def multiply_tuple(x):
@@ -46,3 +48,19 @@ def multiply_tuple(x):
 p = Pool(2)
 out = p.map(multiply_tuple,((5.0,6.0),(7,8),(8,9)))
 print(out)
+workers = p._pool
+print(workers)
+print([w.is_alive() for w in workers])
+
+p.close()
+p.join()
+p = None
+DELTA = 0.1
+time.sleep(DELTA*2)
+
+print(workers)
+print([w.is_alive() for w in workers])
+
+
+p = Pool(2)
+out = p.map(multiply_tuple,((5.0,6.0),(7,8),(8,9)))
