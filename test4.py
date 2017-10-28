@@ -21,10 +21,10 @@ plt.close('all')
 # image domain
 # in general this will be read from an input file
 # in general
-down = 2
-nx = 50//down
-ny = 50//down
-nz = 50//down
+down = 1
+nx = 60//down
+ny = 60//down
+nz = 60//down
 dx = 1.0*down
 dy = 1.1*down
 dz = 0.9*down
@@ -40,7 +40,7 @@ zz = x[None,None,:]*0 + y[None,:,None]*0 + z[:,None,None]
 
 
 # make example images
-r = 12.0
+r = 13.0
 # for blurring
 rb = 1
 x_ = np.arange(-rb,rb+1)
@@ -54,7 +54,7 @@ Khat = np.real(np.fft.fftn(K))
 J = []
 N = 5
 for i in range(N+1):
-    mag = 0.2
+    mag = 0.3
     J_ = (xx - np.mean(x))**2/(r*(1.0 + np.random.randn()*mag))**2 + (yy - np.mean(y))**2/(r*(1.0 + np.random.randn()*mag))**2 + (zz - np.mean(z))**2/(r*(1.0 + np.random.randn()*mag))**2 <= 1
     J_ = J_ + np.random.randn(*J_.shape)*0.05
     # blur
@@ -78,8 +78,8 @@ sigmaR = 5.0
 sigmaI = 0.1
 alpha = 5.0
 epsilon = 2.0e-1
-epsilonA = 1e-3
-nT=5
+epsilonA = 1e-2/N
+nT=3
 niter = 1 # this is for the internal lddmm
 niterA = 500
 nshow = 1

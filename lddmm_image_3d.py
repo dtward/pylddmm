@@ -400,7 +400,7 @@ def lddmm_image_3d_template(x,y,z,I,sigmaI=0.1,sigmaR=10.0,alpha=10.0,nT=5,niter
             vis = 'detjacphi10inv'
             vis = 'grad'
 
-            output['grad'] = IAgrad
+            output['grad'] = IAgrad # to visualize the gradient using a string selected above
             
             extent = (x[0],x[-1],y[0],y[-1])       
             ax = fig.add_subplot(234)
@@ -417,6 +417,7 @@ def lddmm_image_3d_template(x,y,z,I,sigmaI=0.1,sigmaR=10.0,alpha=10.0,nT=5,niter
             h = ax.imshow(output[vis][:,:,nx/2],extent=extent,interpolation='none',cmap='gray')
             plt.colorbar(mappable=h)     
 
-            #fig.savefig('template_iteration_{:04d}.png'.format(iteration))
+            fig.savefig('template_iteration_{:04d}.png'.format(iteration))
             plt.pause(1.0e-10) # draw it now
+    return IA,vtx,vty,vtz
             
