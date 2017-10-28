@@ -66,10 +66,8 @@ nshow = 1
 #lddmm.lddmm_image_3d(x,y,z,J[1],x,y,z,J[2],sigmaI=sigmaI,sigmaR=sigmaR,alpha=alpha,nT=nT,niter=100,epsilon=epsilon,nshow=nshow,vtx=None,vty=None,vtz=None)
 #raise Exception
 
-lddmm.lddmm_image_3d_template(x,y,z,J,sigmaI=sigmaI,sigmaR=sigmaR,alpha=alpha,nT=nT,niter=niter,epsilon=epsilon,nshow=nshow,niterA=niterA,epsilonA=epsilonA,vtx=None,vty=None,vtz=None,IA=I0)
-# NOTE 
-# boundary does not look good, is there something wrong with lambdaI on the boundary?
-# some bullshit is going on on the edges
-
-# at the first iteration there's no gradient (if I start at the average)
-# starting at the second iteration I see the craziness at the edges
+# note, my memory has been going up to about 25% per process before it gets garbage collected
+# plus the main thread might have an extra 25%
+npool = 2
+# or None
+lddmm.lddmm_image_3d_template(x,y,z,J,sigmaI=sigmaI,sigmaR=sigmaR,alpha=alpha,nT=nT,niter=niter,epsilon=epsilon,nshow=nshow,niterA=niterA,epsilonA=epsilonA,vtx=None,vty=None,vtz=None,IA=I0,npool=npool)

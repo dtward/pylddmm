@@ -358,60 +358,89 @@ def lddmm_image_3d_template(x,y,z,I,
         reg_cost = 0.0
         
         
-        
-        '''
-        def lddmm_wrapper(i):
-            print('running process {}'.format(i))
-            output = lddmm_image_3d(x,y,z,IA,x,y,z,I[i],sigmaI=sigmaI,sigmaR=sigmaR,alpha=alpha,nT=nT,niter=niter,epsilon=epsilon,nshow=0,vtx=vtx[i],vty=vty[i],vtz=vtz[i],nprint=0)
-            #return output['vtx'],output['vty'],output['vtz'],output['lambdaI0']
-            return {k:v for k,v in output.iteritems() if k in ['vtx','vty','lambdaI0','Em','Er'] }
-        
-        
-        p = Pool(4)
-        out_all = p.map(lddmm_wrapper,range(N))
-        '''
-        # the above approach did not work, got "Can't pickle <type 'function'>: attribute lookup __builtin__.function failed"
-        # let's try something else
-        # I believe the reason is the way variables are passed based on a context
-        
-        
-        
-        p = Pool(4)                        
-        # data should be
-        # xA,yA,zA,IA,xT,yT,zT,IT,sigmaI=0.1,sigmaR=10.0,alpha=10.0,nT=5,niter=100,epsilon=0.1,nshow=10,nprint=1,vtx=None,vty=None,vtz=None
-        nshowlddmm = 0
-        nprintlddmm = 0
-        data = [(x,y,z,IA,x,y,z,I[i],sigmaI,sigmaR,alpha,nT,niter,epsilon,nshowlddmm,nprintlddmm,vtx[i],vty[i],vtz[i]) for i in range(N)]                
-        print(data)
-        out_all = p.map(lddmm_image_3d_tuple,data)
-        
-        # well this didn't work the first time, got the same errors, tried adding the function in my data list
-        for i in range(N):
-            output = out_all[i]
-            vtx[i] = output['vtx']
-            vty[i] = output['vty']
-            vtz[i] = output['vtz']
-            IAgrad = IAgrad + output['lambdaI0']
-            matching_cost += output['Em'][-1]
-            reg_cost += output['Er'][-1]
-        
-        '''
-        for i in range(N):
-            output = lddmm_image_3d(x,y,z,IA,x,y,z,I[i],sigmaI=sigmaI,sigmaR=sigmaR,alpha=alpha,nT=nT,niter=niter,epsilon=epsilon,nshow=0,vtx=vtx[i],vty=vty[i],vtz=vtz[i],nprint=0)
-            vtx[i] = output['vtx']
-            vty[i] = output['vty']
-            vtz[i] = output['vtz']
-            IAgrad = IAgrad + output['lambdaI0']
-
-            matching_cost += output['Em'][-1]
-            reg_cost += output['Er'][-1]
+        # right now I can't get pool to work without memory usage growing so high the computer crashes
+        # is memory growing even without?
+        if npool is not None and npool > 1:        
+            p = Pool(npool)                        
+            # data should be
+            # xA,yA,zA,IA,xT,yT,zT,IT,sigmaI=0.1,sigmaR=10.0,alpha=10.0,nT=5,niter=100,epsilon=0.1,nshow=10,nprint=1,vtx=None,vty=None,vtz=None
+            nshowlddmm = 0
+            nprintlddmm = 0
+            #data = [(x,y,z,IA,x,y,z,I[i],sigmaI,sigmaR,alpha,nT,niter,epsilon,nshowlddmm,nprintlddmm,vtx[i],vty[i],vtz[i]) for i in range(N)]
+            # this one works but eats up memory
+            #out_all = p.map(lddmm_image_3d_tuple,data)
+            # there is a problem with memory usage growing each time
+            # probably when I zip all this data together into a tuple, it is not being garbage colloected
             
-            # test
-            #figtest.clf()
-            #axtest = figtest.add_subplot(111)
-            #axtest.imshow(output['detjacphi10inv'][nz/2],cmap='gray',interpolation='none')
-            #plt.pause(0.01)
-        '''
+            # this one does not work            
+            #out_all = p.map(lambda x: apply(lddmm_image_3d,x),data)
+            
+            # this one below with chunksize also doesn't work
+            #out_all = p.map(lddmm_image_3d_tuple,data,chunksize=1)
+            
+            # let's try
+            '''
+            results = []
+            for i in range(N):
+                results.append( p.apply_async(lddmm_image_3d,(x,y,z,IA,x,y,z,I[i],sigmaI,sigmaR,alpha,nT,niter,epsilon,nshowlddmm,nprintlddmm,vtx[i],vty[i],vtz[i])) )
+            '''
+            # okay this one also causes memory leak!
+            
+            # let's try again with a generator
+            '''
+            def datagen():
+                for i in range(N):
+                    yield (x,y,z,IA,x,y,z,I[i],sigmaI,sigmaR,alpha,nT,niter,epsilon,nshowlddmm,nprintlddmm,vtx[i],vty[i],vtz[i])
+            data = datagen()
+            out_all = p.map(lddmm_image_3d_tuple,data)
+            '''
+            # still have memory leak with generator
+            
+            
+            # let's try one more
+            # only make the data the first time
+            # since we pass by reference, the elements should update each time
+            if iteration == 0:
+                data = [(x,y,z,IA,x,y,z,I[i],sigmaI,sigmaR,alpha,nT,niter,epsilon,nshowlddmm,nprintlddmm,vtx[i],vty[i],vtz[i]) for i in range(N)]
+            # this one also doesn't work! memory  grows and grows!
+            #out_all = p.map(lddmm_image_3d_tuple,data)
+            out_all = p.map(lddmm_image_3d_tuple,data,chunksize=1)
+            
+            p.close()
+            p.join()
+            '''
+            out_all = []
+            for r in results:
+                out_all.append(r.get())
+            '''
+            
+            # process outputs            
+            for i in range(N):
+                output = out_all[i]
+                vtx[i] = output['vtx']
+                vty[i] = output['vty']
+                vtz[i] = output['vtz']
+                IAgrad = IAgrad + output['lambdaI0']
+                matching_cost += output['Em'][-1]
+                reg_cost += output['Er'][-1]
+        
+        else: # no multiprocessing
+            for i in range(N):
+                output = lddmm_image_3d(x,y,z,IA,x,y,z,I[i],sigmaI=sigmaI,sigmaR=sigmaR,alpha=alpha,nT=nT,niter=niter,epsilon=epsilon,nshow=0,vtx=vtx[i],vty=vty[i],vtz=vtz[i],nprint=0)
+                vtx[i] = output['vtx']
+                vty[i] = output['vty']
+                vtz[i] = output['vtz']
+                IAgrad = IAgrad + output['lambdaI0']
+    
+                matching_cost += output['Em'][-1]
+                reg_cost += output['Er'][-1]
+                
+                # test
+                #figtest.clf()
+                #axtest = figtest.add_subplot(111)
+                #axtest.imshow(output['detjacphi10inv'][nz/2],cmap='gray',interpolation='none')
+                #plt.pause(0.01)
+        
         Em.append(matching_cost)
         Er.append(reg_cost)
         energy = matching_cost + reg_cost
