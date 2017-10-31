@@ -57,8 +57,8 @@ niter = 100
 sigmaR = 100.0 
 sigmaI = 0.1
 alpha = 25.0
-epsilon = 5.0e0
-epsilonA = 1e-3/N
+epsilon = 2.0e0
+epsilonA = 5e-4/N
 nT=4
 niter = 1 # this is for the internal lddmm
 niterA = 500
@@ -68,6 +68,11 @@ nshow = 1
 
 # note, my memory has been going up to about 25% per process before it gets garbage collected
 # plus the main thread might have an extra 25%
-npool = 2
+# I fixed the memory issue by only initializing the pool once, before garbage is accumulated
+npool = 4
 # or None
+sigmaR = 50.0
 lddmm.lddmm_image_3d_template(x,y,z,J,sigmaI=sigmaI,sigmaR=sigmaR,alpha=alpha,nT=nT,niter=niter,epsilon=epsilon,nshow=nshow,niterA=niterA,epsilonA=epsilonA,vtx=None,vty=None,vtz=None,IA=I0,npool=npool)
+
+# well I'm not sure I'm getting the same result as without multiprocessing
+# I'll have to check carefully

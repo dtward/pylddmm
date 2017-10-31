@@ -362,8 +362,17 @@ def lddmm_image_3d_template(x,y,z,I,
         # is memory growing even without?
         if npool is not None and npool > 1:   
             # I'm going to try only opening the pool once
+            # doing this fixes my memory problems!
+            # it seems that otherwise all the garbage goes into each process
+            # now the main process still accumulates garbage
+            
             if iteration == 0:
-                p = Pool(npool)                        
+                p = Pool(npool)  
+                # note callback doesn't work with map, only with map_async
+                # which returns a results object instead of the data itself
+                def callback(x):
+                    # only keep the data I want
+                    return {k:v for k,v in x.iteritems() if k in ['vtx','vty','vtz','lambdaI0','Em','Er']}
             # data should be
             # xA,yA,zA,IA,xT,yT,zT,IT,sigmaI=0.1,sigmaR=10.0,alpha=10.0,nT=5,niter=100,epsilon=0.1,nshow=10,nprint=1,vtx=None,vty=None,vtz=None
             nshowlddmm = 0
@@ -404,11 +413,12 @@ def lddmm_image_3d_template(x,y,z,I,
             # since we pass by reference, the elements should update each time
             
             # this doesn't make a difference
-            if iteration == 0:
-                data = [(x,y,z,IA,x,y,z,I[i],sigmaI,sigmaR,alpha,nT,niter,epsilon,nshowlddmm,nprintlddmm,vtx[i],vty[i],vtz[i]) for i in range(N)]
+            #if iteration == 0: # actually it looks like this ruins it
+            data = [(x,y,z,IA,x,y,z,I[i],sigmaI,sigmaR,alpha,nT,niter,epsilon,nshowlddmm,nprintlddmm,vtx[i],vty[i],vtz[i]) for i in range(N)]
             # this one also doesn't work! memory  grows and grows!
             #out_all = p.map(lddmm_image_3d_tuple,data)
             out_all = p.map(lddmm_image_3d_tuple,data,chunksize=1)
+            # I'm not really sure how chunksize effects things
             
             # note calling map WAITS for all processes to complete
             # imap does not, and returns an iterator with a timeout
