@@ -15,7 +15,7 @@ import matplotlib.pyplot as plt
 import scipy.interpolate as interp
 
 
-def lddmm_image_2d(xA,yA,IA,xT,yT,IT,sigmaI=0.1,sigmaR=10.0,alpha=10.0,nT=5,niter=100,epsilon=0.1,nshow=10):
+def lddmm_image_2d(xA,yA,IA,xT,yT,IT,sigmaI=0.1,sigmaR=10.0,alpha=10.0,nT=5,niter=100,epsilon=0.1,nshow=10,div_free=False):
     # image domain
     # in general this will be read from an input file
     # in general
@@ -168,6 +168,16 @@ def lddmm_image_2d(xA,yA,IA,xT,yT,IT,sigmaI=0.1,sigmaR=10.0,alpha=10.0,nT=5,nite
             # and add the regularization term
             gradx += vtx[t]/sigmaR**2
             grady += vty[t]/sigmaR**2
+            
+            # making this divergence free is a simple change
+            # we let v = curl u
+            # gradient w.r.t. grad_u is curl grad_v
+            # then to go back to v we take curl again
+            # so take curl twice
+            # in 2D we go from xy to z then back to xy
+            # epsilon_{ijk} partial_j (epsilon_{klm} partial_l f_m)
+            if div_free:
+                pass
                     
             # gradient descent update
             vtx[t] -= epsilon*gradx

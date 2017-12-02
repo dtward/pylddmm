@@ -72,7 +72,9 @@ nshow = 1
 npool = 4
 # or None
 sigmaR = 50.0
-lddmm.lddmm_image_3d_template(x,y,z,J,sigmaI=sigmaI,sigmaR=sigmaR,alpha=alpha,nT=nT,niter=niter,epsilon=epsilon,nshow=nshow,niterA=niterA,epsilonA=epsilonA,vtx=None,vty=None,vtz=None,IA=I0,npool=npool)
-
+output = lddmm.lddmm_image_3d_template(x,y,z,J,sigmaI=sigmaI,sigmaR=sigmaR,alpha=alpha,nT=nT,niter=niter,epsilon=epsilon,nshow=nshow,niterA=niterA,epsilonA=epsilonA,vtx=None,vty=None,vtz=None,IA=I0,npool=npool)
+plt.figure()
+plt.imshow(output['IA'][0],cmap='gray')
+plt.imsave('output.png',output['IA'][0],cmap='gray')
 # well I'm not sure I'm getting the same result as without multiprocessing
 # I'll have to check carefully

@@ -517,5 +517,5 @@ def lddmm_image_3d_template(x,y,z,I,
 
             fig.savefig('template_iteration_{:04d}.png'.format(iteration))
             plt.pause(1.0e-10) # draw it now
-    return IA,vtx,vty,vtz
+    return {'IA':IA,'vtx':vtx,'vty':vty,'vtz':vtz}
             
