@@ -4,9 +4,15 @@ Created on Tue Oct 24 14:22:04 2017
 
 @author: dtward
 
-3d lddmm
+3d lddmm with the function lddmm_image_3d
 
-TO DO: template estimation
+Intensity image template estimation with the function 
+lddmm_image_3d_template.  This uses multiprocessing.  This uses gradient 
+descent, no explicit updates with Jacobian weighted average.
+
+This file also includes several helper functions.
+
+TODO: clean up code, remove things that have been commented out, add better documentation.
 
 """
 
@@ -517,5 +523,6 @@ def lddmm_image_3d_template(x,y,z,I,
 
             fig.savefig('template_iteration_{:04d}.png'.format(iteration))
             plt.pause(1.0e-10) # draw it now
+
     return {'IA':IA,'vtx':vtx,'vty':vty,'vtz':vtz}
             
